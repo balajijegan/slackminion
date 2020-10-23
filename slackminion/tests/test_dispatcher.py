@@ -47,6 +47,13 @@ class TestDispatcher(unittest.TestCase):
         e = SlackEvent(event_type='message', **{'data': {'text': 'Hello\xa0world'}})
         assert self.dispatcher._parse_message(e) == ['Hello', 'world']
 
+    def test_strip_formatting(self):
+        test_string = '!abc <@U123456> check <#C123456|test-channel> has <https://www.pinterest.com|www.pinterest.com>'
+        expected_response = '@U123456 check #test-channel has www.pinterest.com'.split(" ")
+        e = SlackEvent(event_type='message', **{'data': {'text': test_string}})
+        parsed_message = self.dispatcher._parse_message(e)
+        self.assertListEqual(self.dispatcher._strip_formatting(parsed_message[1:]), expected_response)
+
     def test_unignore_nonignored_channel(self):
         c = SlackConversation(conversation=test_channel, api_client=test_payload.get('api_client'))
         self.assertFalse(self.dispatcher.unignore(c))
