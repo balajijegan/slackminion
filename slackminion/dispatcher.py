@@ -72,19 +72,19 @@ class MessageDispatcher(object):
         """
         self.log.debug(event)
         if self._ignore_event(event):
-            return None, None, None
+            return None, None, None, "Ignored"
         args = self._parse_message(event)
 
         # commands will always start with !
         if not args[0].startswith('!'):
-            return None, None, None
+            return None, None, None, "Not a command"
 
         self.log.debug("Searching for command using chunks: %s", args)
         cmd, msg_args = self._find_longest_prefix_command(args)
         if cmd is not None:
             if event.user is None:
                 self.log.debug("Discarded message with no originating user: %s", event)
-                return None, None, None
+                return None, None, None, "No User"
 
             if event.channel is not None:
                 sender = "#%s/%s" % (event.channel.name, event.user.formatted_name)
@@ -95,7 +95,7 @@ class MessageDispatcher(object):
             if f:
                 if self._is_channel_ignored(f, event.channel):
                     self.log.info("Channel %s is ignored, discarding command %s", event.channel, cmd)
-                    return '_ignored_', "", None
+                    return '_ignored_', "", None, "Ignored Channel"
 
                 # Strip formatting if requested by plugin
                 if f.cmd_options.get('strip_formatting'):
@@ -110,19 +110,18 @@ class MessageDispatcher(object):
                             output = await f.execute(event, msg_args)
                         else:
                             output = f'DEV_MODE: Would have run async function {f} with args {msg_args}'
-                        return cmd, output, f.cmd_options
                     else:
                         if not dev_mode:
                             output = f.execute(event, msg_args)
                         else:
                             output = f'DEV_MODE: Would have run function {cmd} with args {msg_args}'
-                        return cmd, output, f.cmd_options
+                        return cmd, output, f.cmd_options, "Success"
                 except Exception as e:  # noqa we don't want plugins to crash the bot so
                     self.log.exception('Plugin raised exception')
                     output = f"Command failed due to an exception: {str(e)}"
-                    return cmd, output, f.cmd_options
-            return '_unauthorized_', "Sorry, you are not authorized to run %s" % cmd, None
-        return None, None, None
+                    return cmd, output, f.cmd_options, "Failed"
+            return '_unauthorized_', "Sorry, you are not authorized to run %s" % cmd, None, "Unauthorized"
+        return None, None, None, "Unknown"
 
     def _ignore_event(self, message):
         """

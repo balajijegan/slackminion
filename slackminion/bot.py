@@ -39,6 +39,7 @@ class Bot(object):
         self.test_mode = test_mode
         self.dev_mode = dev_mode
         self.event_loop = asyncio.get_event_loop()
+        self.metric_handler = None
 
         if self.test_mode:
             self.metrics = {
@@ -284,7 +285,9 @@ class Bot(object):
             self._load_user_rights(msg.user)
         try:
             self.log.debug(f'Sending to dispatcher: {msg}')
-            cmd, output, cmd_options = await self.dispatcher.push(msg, self.dev_mode)
+            cmd, output, cmd_options, status = await self.dispatcher.push(msg, self.dev_mode)
+            if self.metric_handler:
+                self.metric_handler.emit_metric(cmd, cmd_options, status)
             self.log.debug(f"Output from dispatcher: {output}")
 
             if output:

@@ -62,6 +62,8 @@ class PluginManager(object):
                 self.plugins.append(p)
                 if p._state_handler:
                     self.state_handler = p
+                if p._metric_handler:
+                    self.bot.metric_handler = p
                 if self.test_mode:
                     self.metrics['plugins_loaded'] += 1
                     self.metrics['load_times'][name] = (datetime.now() - plugin_start_time).total_seconds() * 1000.0

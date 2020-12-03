@@ -15,6 +15,8 @@ plugins:
   - slackminion.plugins.test.TestPlugin
 #  - slackminion.plugins.test.TestAclPlugin
   - slackminion.plugins.state.file.FileStateHandler
+# A plugin for metrics. If you uncomment this one, add a replacement
+  - slackminion.plugins.metrics.MetricsHandler
 # Comment out the above and uncomment this line to use s3 instead
 #  - slackminion.plugins.state_s3.handler.S3StateHandler
 # Comment out the above and uncomment this line to use redis instead
